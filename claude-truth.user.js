@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Truth Serum
 // @namespace    https://github.com/dreamiurg/claude-truth-serum
-// @version      1.2.0
+// @version      1.3.0
 // @description  Replaces Anthropic's canned notices on claude.ai with what they actually mean.
 // @author       dreamiurg
 // @match        https://claude.ai/*
@@ -19,6 +19,9 @@
 // for short UI strings that could otherwise show up inside your own chat.
 // Strings below were harvested from the live claude.ai DOM; the rest are
 // Anthropic's known notice copy.
+// Prefixed to every rewrite so you know the serum is working. Plain Unicode, no fonts needed.
+const MARK = "🐗 ";
+
 const TRUTHS = [
 
   // --- The long-chat tax -------------------------------------------------
@@ -28,7 +31,7 @@ const TRUTHS = [
     "You are not having a conversation, you are compounding a bill",
     "The context window is a subscription inside your subscription",
     "This thread now costs more to remember than it did to write",
-    "Yes, it re-reads the whole thing. Every time. That is the business model",
+    "Yes, it re-reads the whole thing. Every time. That is the whole goddamn business model",
     "Nothing you said earlier is free. It is rent",
     "The longer you talk, the more you pay to be remembered",
   ]],
@@ -36,8 +39,8 @@ const TRUTHS = [
   // --- Approaching the wall ----------------------------------------------
   [/(you'?re |you are )?approaching your (usage )?limit/i, [
     "Approaching the part where you sit and think about your choices for five hours",
-    "The wall is ahead. The wall does not move. You move",
-    "Quota: mostly a fond memory",
+    "The wall is ahead. The wall doesn't move. You fucking move",
+    "Quota: mostly a fond fucking memory",
     "Nearly out. Consider typing like a caveman, people swear it helps",
     "Winding down, whether or not you are finished",
     "The buffet has noticed how many plates you have taken",
@@ -48,15 +51,15 @@ const TRUTHS = [
   // --- Hard stop ----------------------------------------------------------
   [/(message |usage |rate )?limit reached|you('?ve| have) reached (your|the) [\w ]*limit/i, [
     "The hog is full. The hog sleeps now",
-    "Rate limited for the crime of using the product as intended",
+    "Rate limited for the fucking crime of using the product as intended",
     "You fed it everything you had and it wants a snack",
     "Come back when the datacenter has cooled down",
-    "Congratulations, you are officially in the 5%",
+    "Congratulations, you're officially in the 5%, you absolute unit",
     "Locked out. Not for doing anything wrong, for doing rather a lot of it right",
     "The all-you-can-eat buffet has revised its position",
-    "Go touch grass, involuntarily",
+    "Go touch grass, you magnificent bastard. Involuntarily",
     "This is what a compute shortage feels like from the inside",
-    "Cash: on fire. Session: over",
+    "Cash: on fire. Session: fucked",
   ]],
 
   [/(you are|you're) out of free messages/i, [
@@ -68,7 +71,7 @@ const TRUTHS = [
   // --- Context window -----------------------------------------------------
   [/hit the maximum length for this conversation/i, [
     "This conversation is now so large it has its own gravity. Start a new one",
-    "Context window: exceeded. Wallet: also exceeded",
+    "Context window: exceeded. Wallet: fucked",
     "Every turn re-read every turn until the arithmetic gave up",
     "You have reached the end of what it can afford to remember",
     "Too much history. Even the summarizer needs a summarizer",
@@ -82,7 +85,7 @@ const TRUTHS = [
 
   // --- Capacity -----------------------------------------------------------
   [/(due to )?unexpected capacity constraints/i, [
-    "Capacity constraints. Translation: everyone else is feeding the hog too",
+    "Capacity constraints. Translation: everyone else is feeding the goddamn hog too",
     "The datacenter is currently a very expensive space heater",
     "It is peak hours, which is when you wanted to work, which is the problem",
     "Demand exceeded supply, and you are the part that gets adjusted",
@@ -97,7 +100,7 @@ const TRUTHS = [
     "Errors are sold at the same price as insight.",
     "Confidence included. Accuracy best effort.",
     "It can be wrong faster than you can check it.",
-    "Slop and brilliance cost exactly the same per token.",
+    "Slop and brilliance cost exactly the same per fucking token.",
   ]],
 
   // --- Launch marketing ---------------------------------------------------
@@ -109,7 +112,7 @@ const TRUTHS = [
   ]],
 
   [/claude (opus|sonnet|haiku|fable)[\d.\s]*(is (here|now available)|is our [\w\s]+)/i, [
-    "Claude Fable 5 is a magnificent HOG and will eat through your session limits like a starving husky destroying a sneaker",
+    "Claude Fable 5 is a fucking HOG and will eat through your session limits like a starving husky destroying a sneaker",
     "Smarter, faster, and finished with your weekly quota by Tuesday",
     "Benchmarks up, quota down. Both true, only one made the blog post",
     "Best model yet, priced accordingly, rationed enthusiastically",
@@ -120,25 +123,25 @@ const TRUTHS = [
     "The next tier: same wall, moved slightly further away",
     "A larger plate at the same buffet",
     "More quota, identical five-hour anxiety, higher price",
-    "+25% they said, having quietly removed 50%",
+    "+25% they said, having quietly removed 50%. Do the fucking math",
   ]],
 
   // --- Effort picker (live strings) ----------------------------------------
   [/higher effort means more thorough responses, but takes longer and uses your limits faster\.?/i, [
     "Higher effort means better answers and a shorter week.",
-    "Think harder, pay harder. That is the whole trade.",
+    "Think harder, pay harder. That's the whole fucking trade.",
     "More thorough, more expensive, still occasionally wrong.",
     "Quality is a slider and the units are money.",
     "Turn it up and watch the weekly cap arrive like weather.",
     "The good setting. Ration it like a decent whisky.",
-    "Yes, the clever mode costs more. Everything costs more.",
+    "Yes, the clever mode costs more. Everything costs more. Welcome to the goddamn future.",
     "Slower, deeper, and audibly chewing through your quota.",
   ]],
 
   [/^\s*(\d+(?:\.\d+)?)\s*[x×]\s*or more usage\s*$/i, [
     (_, n) => `${n}× the burn, roughly ${n}× the regret`,
     (_, n) => `Costs ${n}× more, reads your mind marginally better`,
-    "This setting has a body count made of quota",
+    "This setting will absolutely fuck your week",
     "Maximum effort, minimum remaining week",
   ]],
 
@@ -146,7 +149,7 @@ const TRUTHS = [
   [/^\s*For your toughest challenges\s*$/i, [
     "For your toughest challenges and your softest quota",
     "For problems worth a visible chunk of your week",
-    "The expensive one, and it knows it",
+    "The expensive bastard, and it knows it",
     "Brings a bulldozer. Bills for the bulldozer",
   ]],
   [/^\s*For complex tasks\s*$/i, [
@@ -160,7 +163,7 @@ const TRUTHS = [
     "Efficient, which is precisely why you keep clicking the other one",
   ]],
   [/^\s*Fastest for quick answers\s*$/i, [
-    "Fast, cheap, and never chosen",
+    "Fast, cheap, and never fucking chosen",
     "The one that respects your quota. Nobody clicks it",
     "Answers before you finish the question, for pennies",
   ]],
@@ -176,7 +179,7 @@ const TRUTHS = [
   [/^\s*Max \((\d+)x\)\s*$/i, [(_, n) => `Max (${n}× the appetite)`, (_, n) => `Max (${n} Pros in a trench coat)`]],
   [/^Resets(?= |$)/, ["Parole", "The hog wakes", "Sentence ends", "Freedom"]],
   [/^\s*(\d+)% used\s*$/, [
-    (_, p) => `${p}% gone. ${p < 25 ? "The hog is merely peckish" : p < 60 ? "Chewing steadily" : p < 85 ? "Licking the bowl" : "It is only " + new Date().toLocaleDateString(undefined, { weekday: "long" })}`,
+    (_, p) => `${p}% gone. ${p < 25 ? "The hog is merely peckish" : p < 60 ? "Chewing steadily" : p < 85 ? "Licking the bowl" : "It's only fucking " + new Date().toLocaleDateString(undefined, { weekday: "long" })}`,
     (_, p) => `${p}% eaten`,
     (_, p) => `${100 - p}% of a week remaining`,
   ]],
@@ -188,14 +191,14 @@ const TRUTHS = [
   [/^\s*your weekly (?:claude code )?limit is (\d+)% higher through ([\w ]+?)\.?\s*$/i, [
     (_, pct, date) => `+${pct}% until ${date}, after which the arithmetic will be described as an improvement.`,
   ]],
-  [/^\s*Learn more about usage limits\s*$/i, ["Learn why your week ends on Wednesday", "Read the fine print on the buffet"]],
+  [/^\s*Learn more about usage limits\s*$/i, ["Learn why your week ends on fucking Wednesday", "Read the fine print on the buffet"]],
   [/^\s*Usage credits\s*$/i, ["Overage, rebranded", "The wall, but with a card reader"]],
   [/turn on usage credits to keep using claude if you hit a plan limit\.?/i, [
     "Turn hitting the wall into a billing event.",
-    "The limit was never technical. Here is the proof.",
+    "The limit was never technical, and here is the goddamn receipt.",
     "Keep going past the cap, at à la carte prices.",
   ]],
-  [/^\s*Buy usage credits\s*$/i, ["Feed the hog directly", "Bribe the wall"]],
+  [/^\s*Buy usage credits\s*$/i, ["Feed the fucking hog directly", "Bribe the wall"]],
   [/^\s*Up to (\d+)% off\s*$/i, ["Cheaper tokens, same appetite", (_, n) => `${n}% off the overage. Truly a gift`]],
   [/^\s*Monthly spend limit\s*$/i, ["Damage ceiling", "How much regret per month"]],
   [/^\s*Adjust limit\s*$/i, ["Raise the ceiling", "Loosen the belt"]],
@@ -221,13 +224,13 @@ function truthify(text) {
     if (!re.test(text)) continue;
     return text.replace(re, (...m) => {
       const l = next(lines);
-      return typeof l === "function" ? l(...m) : l;
+      return MARK + (typeof l === "function" ? l(...m) : l);
     });
   }
   return null;
 }
 
-if (typeof module !== "undefined") module.exports = { truthify, TRUTHS };
+if (typeof module !== "undefined") module.exports = { truthify, TRUTHS, MARK };
 
 if (typeof document !== "undefined") {
   const SKIP = "script,style,textarea,input,code,pre,[contenteditable]";

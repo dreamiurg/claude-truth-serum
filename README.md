@@ -9,7 +9,7 @@ with what they would say if the copywriter had just seen the usage tab.
 
 **After:**
 
-> Think harder, pay harder. That is the whole trade.
+> 🐗 Think harder, pay harder. That's the whole fucking trade.
 
 **Before:**
 
@@ -17,7 +17,7 @@ with what they would say if the copywriter had just seen the usage tab.
 
 **After:**
 
-> 85% gone. It is only Wednesday
+> 🐗 85% gone. It's only fucking Wednesday
 
 ## Why
 
@@ -41,6 +41,10 @@ happens.
 
 ## What it does
 
+- Prefixes every rewrite with 🐗 so you know it was the serum and not a
+  sudden outbreak of honesty at Anthropic. Change `MARK` at the top if you
+  prefer a different animal.
+- Contains profanity. Not a lot. Roughly the amount the situation calls for.
 - Rewrites **36 known notices** with a rotating pool of **130 truths**, so the
   wall says something different each time you hit it.
 - Covers the composer warnings, the model picker, the effort menu, the

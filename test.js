@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { truthify, TRUTHS } = require("./claude-truth.user.js");
+const { truthify, TRUTHS, MARK } = require("./claude-truth.user.js");
 
 // Real strings harvested from claude.ai, plus the known notice copy.
 const SAMPLES = [
@@ -26,6 +26,7 @@ const SAMPLES = [
 for (const s of SAMPLES) {
   const out = truthify(s);
   assert.ok(out !== null && out !== s, `should rewrite: ${s}`);
+  assert.ok(out.includes(MARK), `should carry the mark: ${out}`);
   assert.strictEqual(truthify(out), null, `output must not re-match: ${s} -> ${out}`);
 }
 
@@ -35,7 +36,7 @@ assert.ok(partial.startsWith("Heads up: ") && partial.endsWith(", sorry!"), "kee
 
 // Captures flow into function replacements.
 assert.ok(/September 13/.test(truthify("Your limits are temporarily boosted. Your weekly Claude Code limit is 50% higher through September 13.")));
-assert.ok(/^85% /.test(truthify("85% used")));
+assert.ok(/\b(85|15)%/.test(truthify("85% used")), "keeps the number");
 
 // Non-matches, oversized nodes, and anchored patterns inside prose are left alone.
 assert.strictEqual(truthify("Sure, here's the refactored function."), null);

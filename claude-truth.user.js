@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Claude Truth Serum
 // @namespace    https://github.com/dreamiurg/claude-truth-serum
-// @version      1.3.0
+// @version      1.4.0
 // @description  Replaces Anthropic's canned notices on claude.ai with what they actually mean.
 // @author       dreamiurg
 // @match        https://claude.ai/*
 // @match        https://*.claude.ai/*
 // @run-at       document-idle
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
 // @downloadURL  https://raw.githubusercontent.com/dreamiurg/claude-truth-serum/main/claude-truth.user.js
 // @updateURL    https://raw.githubusercontent.com/dreamiurg/claude-truth-serum/main/claude-truth.user.js
 // ==/UserScript==
@@ -21,6 +23,14 @@
 // Anthropic's known notice copy.
 // Prefixed to every rewrite so you know the serum is working. Plain Unicode, no fonts needed.
 const MARK = "🐗 ";
+
+// Censored mode: toggle from the userscript menu (Tampermonkey/Violentmonkey icon).
+// Same truths, f-words bleeped. Default is uncensored, because that is the truth.
+const CENSOR = typeof GM_getValue === "function" ? !!GM_getValue("censor", false) : false;
+const bleep = (s) => s
+  .replace(/\b(f)uck(\w*)/gi, "$1***$2")
+  .replace(/\b(g)oddamn\b/gi, "$1*ddamn")
+  .replace(/\b(b)astard(s?)\b/gi, "$1*stard$2");
 
 const TRUTHS = [
 
@@ -104,6 +114,12 @@ const TRUTHS = [
   ]],
 
   // --- Launch marketing ---------------------------------------------------
+  // Live string from the claude.ai composer banner. Must precede the generic "is our" pattern.
+  [/claude (\w+ \d+(?:\.\d+)?) is our most capable model and draws down usage (\d+(?:\.\d+)?)\u00d7 faster than (\w+ \d+(?:\.\d+)?)\.?/i, [
+    (_, m, n, o) => `${m} is a fucking HOG and eats your limits ${n}\u00d7 faster than ${o}. That is the whole announcement.`,
+    (_, m, n) => `${m}: smarter, and ${n}\u00d7 hungrier. Choose wisely, or don't, it is your week`,
+    (_, m, n, o) => `${m} does in one message what ${o} did in ${n}. To your quota.`,
+  ]],
   [/introducing claude[\w\s.]*/i, [
     "Introducing a magnificent new hog with an even larger appetite",
     "New model. Same appetite, bigger fork",
@@ -218,19 +234,27 @@ function next(lines) {
 }
 
 // Returns the rewritten string, or null if nothing matched.
-function truthify(text) {
+function truthify(text, censor = CENSOR) {
   if (!text || text.length > 400) return null;
   for (const [re, lines] of TRUTHS) {
     if (!re.test(text)) continue;
-    return text.replace(re, (...m) => {
+    const out = text.replace(re, (...m) => {
       const l = next(lines);
       return MARK + (typeof l === "function" ? l(...m) : l);
     });
+    return censor ? bleep(out) : out;
   }
   return null;
 }
 
-if (typeof module !== "undefined") module.exports = { truthify, TRUTHS, MARK };
+if (typeof module !== "undefined") module.exports = { truthify, TRUTHS, MARK, bleep };
+
+if (typeof GM_registerMenuCommand === "function") {
+  GM_registerMenuCommand(CENSOR ? "Truth Serum: uncensor (reloads)" : "Truth Serum: censor (reloads)", () => {
+    GM_setValue("censor", !CENSOR);
+    location.reload();
+  });
+}
 
 if (typeof document !== "undefined") {
   const SKIP = "script,style,textarea,input,code,pre,[contenteditable]";

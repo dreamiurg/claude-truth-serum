@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { truthify, TRUTHS, MARK } = require("./claude-truth.user.js");
+const { truthify, TRUTHS, MARK, bleep } = require("./claude-truth.user.js");
 
 // Real strings harvested from claude.ai, plus the known notice copy.
 const SAMPLES = [
@@ -20,6 +20,7 @@ const SAMPLES = [
   "Turn on usage credits to keep using Claude if you hit a plan limit.",
   "Claude can make mistakes. Please double-check responses.",
   "Dmytro returns!",
+  "Claude Fable 5 is our most capable model and draws down usage 2\u00d7 faster than Opus 5.",
   "Thinking…",
 ];
 
@@ -37,6 +38,14 @@ assert.ok(partial.startsWith("Heads up: ") && partial.endsWith(", sorry!"), "kee
 // Captures flow into function replacements.
 assert.ok(/September 13/.test(truthify("Your limits are temporarily boosted. Your weekly Claude Code limit is 50% higher through September 13.")));
 assert.ok(/\b(85|15)%/.test(truthify("85% used")), "keeps the number");
+
+// Censor mode bleeps without breaking idempotence.
+assert.strictEqual(bleep("fucking fucked goddamn bastards"), "f***ing f***ed g*ddamn b*stards");
+for (const s of SAMPLES) {
+  const out = truthify(s, true);
+  assert.ok(!/fuck|goddamn|bastard/i.test(out), `censor leaked: ${out}`);
+  assert.strictEqual(truthify(out, true), null, `censored output re-matches: ${out}`);
+}
 
 // Non-matches, oversized nodes, and anchored patterns inside prose are left alone.
 assert.strictEqual(truthify("Sure, here's the refactored function."), null);

@@ -45,6 +45,8 @@ happens.
   sudden outbreak of honesty at Anthropic. Change `MARK` at the top if you
   prefer a different animal.
 - Contains profanity. Not a lot. Roughly the amount the situation calls for.
+  Too much for the office? Click the Tampermonkey/Violentmonkey icon →
+  **Truth Serum: censor**. Same truths, f-words bleeped, page reloads.
 - Rewrites **36 known notices** with a rotating pool of **130 truths**, so the
   wall says something different each time you hit it.
 - Covers the composer warnings, the model picker, the effort menu, the

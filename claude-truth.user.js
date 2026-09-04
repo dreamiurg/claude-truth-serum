@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Truth Serum
 // @namespace    https://github.com/dreamiurg/claude-truth-serum
-// @version      1.0.0
+// @version      1.2.0
 // @description  Replaces Anthropic's canned notices on claude.ai with what they actually mean.
 // @author       dreamiurg
 // @match        https://claude.ai/*
@@ -12,61 +12,217 @@
 // @updateURL    https://raw.githubusercontent.com/dreamiurg/claude-truth-serum/main/claude-truth.user.js
 // ==/UserScript==
 
-// Add a line here and you've added a truth. That's the whole config system.
+// [pattern, [rotating replacements]]. A replacement is a string or a
+// (match, ...captures) => string function. Add a line, add a truth.
+//
+// Anchored (^...$) patterns only match a whole text node / element — use those
+// for short UI strings that could otherwise show up inside your own chat.
+// Strings below were harvested from the live claude.ai DOM; the rest are
+// Anthropic's known notice copy.
 const TRUTHS = [
+
+  // --- The long-chat tax -------------------------------------------------
   [/long chats cause you to reach your usage limits faster/i, [
-    "Long chats burn quota faster. So do short chats. So does existing.",
-    "Every message you send is a small charitable donation to the GPU industry.",
-    "That context window isn't free, and guess who's holding the bill.",
+    "Long chats burn quota faster. So do short chats. So does breathing near the tab",
+    "Every turn re-reads every previous turn. Message 30 costs thirty times message 1",
+    "You are not having a conversation, you are compounding a bill",
+    "The context window is a subscription inside your subscription",
+    "This thread now costs more to remember than it did to write",
+    "Yes, it re-reads the whole thing. Every time. That is the business model",
+    "Nothing you said earlier is free. It is rent",
+    "The longer you talk, the more you pay to be remembered",
   ]],
+
+  // --- Approaching the wall ----------------------------------------------
   [/(you'?re |you are )?approaching your (usage )?limit/i, [
-    "You are approaching the part where you get to sit and think about your choices for five hours",
-    "Token budget: largely a memory at this point",
-    "Approaching the wall. The wall is not moving",
+    "Approaching the part where you sit and think about your choices for five hours",
+    "The wall is ahead. The wall does not move. You move",
+    "Quota: mostly a fond memory",
+    "Nearly out. Consider typing like a caveman, people swear it helps",
+    "Winding down, whether or not you are finished",
+    "The buffet has noticed how many plates you have taken",
+    "Almost time to go outside and look at a tree",
+    "The lizard-brain part of the session begins now",
   ]],
-  [/(message |usage )?limit reached/i, [
+
+  // --- Hard stop ----------------------------------------------------------
+  [/(message |usage |rate )?limit reached|you('?ve| have) reached (your|the) [\w ]*limit/i, [
     "The hog is full. The hog sleeps now",
     "Rate limited for the crime of using the product as intended",
     "You fed it everything you had and it wants a snack",
+    "Come back when the datacenter has cooled down",
+    "Congratulations, you are officially in the 5%",
+    "Locked out. Not for doing anything wrong, for doing rather a lot of it right",
+    "The all-you-can-eat buffet has revised its position",
+    "Go touch grass, involuntarily",
+    "This is what a compute shortage feels like from the inside",
+    "Cash: on fire. Session: over",
   ]],
+
   [/(you are|you're) out of free messages/i, [
     "The free samples are over and the salesman has appeared",
+    "That was the trial working exactly as designed",
+    "Enjoyed that? It has a price, and here it comes",
   ]],
+
+  // --- Context window -----------------------------------------------------
   [/hit the maximum length for this conversation/i, [
     "This conversation is now so large it has its own gravity. Start a new one",
     "Context window: exceeded. Wallet: also exceeded",
+    "Every turn re-read every turn until the arithmetic gave up",
+    "You have reached the end of what it can afford to remember",
+    "Too much history. Even the summarizer needs a summarizer",
   ]],
-  [/(due to )?unexpected capacity constraints/i, [
-    "Capacity constraints. Translation: everyone else is feeding the hog too",
-    "The datacenter is currently a space heater and nothing else",
-  ]],
+
   [/(your )?prompt is too long/i, [
     "Too many characters, says the thing that writes six paragraphs to say yes",
+    "Your input is the expensive part now. Bold of them",
+    "Trim it down. It will pad it back out on the way home",
   ]],
+
+  // --- Capacity -----------------------------------------------------------
+  [/(due to )?unexpected capacity constraints/i, [
+    "Capacity constraints. Translation: everyone else is feeding the hog too",
+    "The datacenter is currently a very expensive space heater",
+    "It is peak hours, which is when you wanted to work, which is the problem",
+    "Demand exceeded supply, and you are the part that gets adjusted",
+    "Somewhere a GPU is glowing and it is technically your fault",
+    "It is faster to change your behaviour than to install new hardware",
+  ]],
+
+  // --- The disclaimer -----------------------------------------------------
   [/claude can make mistakes\.?\s*(please double-?check responses\.?)?/i, [
     "May be wrong. Expensively, confidently, and at considerable length.",
-    "Wrong or right, the tokens are billed the same.",
+    "Wrong or right, the tokens bill identically.",
+    "Errors are sold at the same price as insight.",
+    "Confidence included. Accuracy best effort.",
+    "It can be wrong faster than you can check it.",
+    "Slop and brilliance cost exactly the same per token.",
   ]],
+
+  // --- Launch marketing ---------------------------------------------------
   [/introducing claude[\w\s.]*/i, [
     "Introducing a magnificent new hog with an even larger appetite",
     "New model. Same appetite, bigger fork",
+    "A smarter one, and it would like to eat your Tuesday",
+    "More reasoning per dollar, fewer dollars per week",
   ]],
+
   [/claude (opus|sonnet|haiku|fable)[\d.\s]*(is (here|now available)|is our [\w\s]+)/i, [
     "Claude Fable 5 is a magnificent HOG and will eat through your session limits like a starving husky destroying a sneaker",
-    "Smarter model, same weekly quota, gone by Tuesday",
+    "Smarter, faster, and finished with your weekly quota by Tuesday",
+    "Benchmarks up, quota down. Both true, only one made the blog post",
+    "Best model yet, priced accordingly, rationed enthusiastically",
   ]],
+
   [/upgrade to (claude )?(pro|max)/i, [
     "Pay more and the hog becomes merely enormous",
+    "The next tier: same wall, moved slightly further away",
+    "A larger plate at the same buffet",
+    "More quota, identical five-hour anxiety, higher price",
+    "+25% they said, having quietly removed 50%",
   ]],
+
+  // --- Effort picker (live strings) ----------------------------------------
+  [/higher effort means more thorough responses, but takes longer and uses your limits faster\.?/i, [
+    "Higher effort means better answers and a shorter week.",
+    "Think harder, pay harder. That is the whole trade.",
+    "More thorough, more expensive, still occasionally wrong.",
+    "Quality is a slider and the units are money.",
+    "Turn it up and watch the weekly cap arrive like weather.",
+    "The good setting. Ration it like a decent whisky.",
+    "Yes, the clever mode costs more. Everything costs more.",
+    "Slower, deeper, and audibly chewing through your quota.",
+  ]],
+
+  [/^\s*(\d+(?:\.\d+)?)\s*[x×]\s*or more usage\s*$/i, [
+    (_, n) => `${n}× the burn, roughly ${n}× the regret`,
+    (_, n) => `Costs ${n}× more, reads your mind marginally better`,
+    "This setting has a body count made of quota",
+    "Maximum effort, minimum remaining week",
+  ]],
+
+  // --- Model picker subtitles (live strings, anchored) ----------------------
+  [/^\s*For your toughest challenges\s*$/i, [
+    "For your toughest challenges and your softest quota",
+    "For problems worth a visible chunk of your week",
+    "The expensive one, and it knows it",
+    "Brings a bulldozer. Bills for the bulldozer",
+  ]],
+  [/^\s*For complex tasks\s*$/i, [
+    "For complex tasks, and simple ones it will overthink anyway",
+    "Capable, thorough, permanently hungry",
+    "Will use the entire context window because it is there",
+  ]],
+  [/^\s*Most efficient for everyday tasks\s*$/i, [
+    "The one you should be using and won't",
+    "Cheap, quick, quietly good enough",
+    "Efficient, which is precisely why you keep clicking the other one",
+  ]],
+  [/^\s*Fastest for quick answers\s*$/i, [
+    "Fast, cheap, and never chosen",
+    "The one that respects your quota. Nobody clicks it",
+    "Answers before you finish the question, for pennies",
+  ]],
+  [/^\s*More models\s*$/i, [
+    "More ways to spend the same budget",
+    "Additional appetites",
+  ]],
+
+  // --- Settings → Usage (live strings) --------------------------------------
+  [/^\s*Plan usage limits\s*$/i, ["The rationing schedule", "Your allowance"]],
+  [/^\s*Weekly limits\s*$/i, ["Weekly rations", "How much week you have left"]],
+  [/^\s*Current session\s*$/i, ["This five-hour sitting", "Current feeding window"]],
+  [/^\s*Max \((\d+)x\)\s*$/i, [(_, n) => `Max (${n}× the appetite)`, (_, n) => `Max (${n} Pros in a trench coat)`]],
+  [/^Resets(?= |$)/, ["Parole", "The hog wakes", "Sentence ends", "Freedom"]],
+  [/^\s*(\d+)% used\s*$/, [
+    (_, p) => `${p}% gone. ${p < 25 ? "The hog is merely peckish" : p < 60 ? "Chewing steadily" : p < 85 ? "Licking the bowl" : "It is only " + new Date().toLocaleDateString(undefined, { weekday: "long" })}`,
+    (_, p) => `${p}% eaten`,
+    (_, p) => `${100 - p}% of a week remaining`,
+  ]],
+  [/your limits are temporarily boosted\.?\s*your weekly (?:claude code )?limit is (\d+)% higher through ([\w ]+?)\.?$/i, [
+    (_, pct, date) => `A ${pct}% promo, ending ${date}. Watch the removal get announced as a raise.`,
+    (_, pct, date) => `Temporary generosity: +${pct}% until ${date}, then back to regularly scheduled rationing.`,
+  ]],
+  [/^\s*your limits are temporarily boosted\.?\s*$/i, ["Temporary generosity in effect.", "A promo, not a policy."]],
+  [/^\s*your weekly (?:claude code )?limit is (\d+)% higher through ([\w ]+?)\.?\s*$/i, [
+    (_, pct, date) => `+${pct}% until ${date}, after which the arithmetic will be described as an improvement.`,
+  ]],
+  [/^\s*Learn more about usage limits\s*$/i, ["Learn why your week ends on Wednesday", "Read the fine print on the buffet"]],
+  [/^\s*Usage credits\s*$/i, ["Overage, rebranded", "The wall, but with a card reader"]],
+  [/turn on usage credits to keep using claude if you hit a plan limit\.?/i, [
+    "Turn hitting the wall into a billing event.",
+    "The limit was never technical. Here is the proof.",
+    "Keep going past the cap, at à la carte prices.",
+  ]],
+  [/^\s*Buy usage credits\s*$/i, ["Feed the hog directly", "Bribe the wall"]],
+  [/^\s*Up to (\d+)% off\s*$/i, ["Cheaper tokens, same appetite", (_, n) => `${n}% off the overage. Truly a gift`]],
+  [/^\s*Monthly spend limit\s*$/i, ["Damage ceiling", "How much regret per month"]],
+  [/^\s*Adjust limit\s*$/i, ["Raise the ceiling", "Loosen the belt"]],
+
+  // --- Misc chrome ----------------------------------------------------------
+  [/^\s*(\w+) returns!\s*$/, [(_, n) => `${n} returns! So does the meter`, (_, n) => `Back for more, ${n}? The hog remembers you`]],
+  [/^\s*Thinking[.…]*\s*$/i, ["Spending…", "Deliberating, expensively…", "Ruminating at 3.5×…", "Quietly consuming your week…"]],
 ];
 
-const pick = (a) => a[Math.floor(Math.random() * a.length)];
+// ponytail: rotate with a random start offset per session, so consecutive
+// notices differ instead of repeating like Math.random() does.
+const turn = new Map();
+function next(lines) {
+  const i = turn.has(lines) ? turn.get(lines) : Math.floor(Math.random() * lines.length);
+  turn.set(lines, (i + 1) % lines.length);
+  return lines[i];
+}
 
 // Returns the rewritten string, or null if nothing matched.
 function truthify(text) {
   if (!text || text.length > 400) return null;
   for (const [re, lines] of TRUTHS) {
-    if (re.test(text)) return text.replace(re, () => pick(lines));
+    if (!re.test(text)) continue;
+    return text.replace(re, (...m) => {
+      const l = next(lines);
+      return typeof l === "function" ? l(...m) : l;
+    });
   }
   return null;
 }
@@ -75,18 +231,25 @@ if (typeof module !== "undefined") module.exports = { truthify, TRUTHS };
 
 if (typeof document !== "undefined") {
   const SKIP = "script,style,textarea,input,code,pre,[contenteditable]";
-
-  function replaceIn(node) {
-    if (node.parentElement && node.parentElement.closest(SKIP)) return;
-    const out = truthify(node.nodeValue);
-    if (out !== null) node.nodeValue = out;
-  }
+  // Formatting-only tags. No <a>: replacing textContent would eat the link.
+  const INLINE = new Set(["SPAN", "STRONG", "B", "EM", "I", "U", "S", "SMALL", "MARK", "SUP", "SUB"]);
+  const inlineOnly = (el) => [...el.children].every((c) => INLINE.has(c.tagName) && inlineOnly(c));
 
   function scan(root) {
-    if (root.nodeType === Node.TEXT_NODE) return replaceIn(root);
-    if (root.nodeType !== Node.ELEMENT_NODE) return;
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    for (let n = w.nextNode(); n; n = w.nextNode()) replaceIn(n);
+    if (root.nodeType === Node.TEXT_NODE) {
+      if (root.parentElement && root.parentElement.closest(SKIP)) return;
+      const out = truthify(root.nodeValue);
+      if (out !== null) root.nodeValue = out;
+      return;
+    }
+    if (root.nodeType !== Node.ELEMENT_NODE || root.closest(SKIP)) return;
+    // Element pass first: catches notices React splits across <strong> + #text
+    // (e.g. the "temporarily boosted" banner). Flattens the formatting.
+    if (root.children.length && inlineOnly(root)) {
+      const out = truthify(root.textContent);
+      if (out !== null) { root.textContent = out; return; }
+    }
+    for (const c of [...root.childNodes]) scan(c);
   }
 
   // ponytail: rescan only mutated subtrees, coalesced per frame. Claude.ai mutates

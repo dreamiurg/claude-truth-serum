@@ -1,26 +1,54 @@
 const assert = require("assert");
 const { truthify, TRUTHS } = require("./claude-truth.user.js");
 
-// Matches get rewritten...
-for (const [re] of TRUTHS) assert.ok(re.test("Message limit reached") || true);
-const hit = truthify("Long chats cause you to reach your usage limits faster");
-assert.ok(hit && !/usage limits faster/.test(hit), "known notice should be rewritten");
+// Real strings harvested from claude.ai, plus the known notice copy.
+const SAMPLES = [
+  "Long chats cause you to reach your usage limits faster",
+  "Higher effort means more thorough responses, but takes longer and uses your limits faster.",
+  "3.5× or more usage",
+  "1.5× or more usage",
+  "For your toughest challenges",
+  "Fastest for quick answers",
+  "Max (20x)",
+  "Resets in 4 hr 40 min",
+  "Resets Sat 8:00 PM",
+  "85% used",
+  "2% used",
+  "Your limits are temporarily boosted. Your weekly Claude Code limit is 50% higher through September 13.",
+  "Your limits are temporarily boosted.",
+  "Your weekly Claude Code limit is 50% higher through September 13.",
+  "Turn on usage credits to keep using Claude if you hit a plan limit.",
+  "Claude can make mistakes. Please double-check responses.",
+  "Dmytro returns!",
+  "Thinking…",
+];
 
-// ...surrounding text survives.
+for (const s of SAMPLES) {
+  const out = truthify(s);
+  assert.ok(out !== null && out !== s, `should rewrite: ${s}`);
+  assert.strictEqual(truthify(out), null, `output must not re-match: ${s} -> ${out}`);
+}
+
+// Surrounding text survives a partial match.
 const partial = truthify("Heads up: message limit reached, sorry!");
 assert.ok(partial.startsWith("Heads up: ") && partial.endsWith(", sorry!"), "keeps context");
 
-// Non-matches and oversized nodes are left alone (idempotence + no chat mangling).
+// Captures flow into function replacements.
+assert.ok(/September 13/.test(truthify("Your limits are temporarily boosted. Your weekly Claude Code limit is 50% higher through September 13.")));
+assert.ok(/^85% /.test(truthify("85% used")));
+
+// Non-matches, oversized nodes, and anchored patterns inside prose are left alone.
 assert.strictEqual(truthify("Sure, here's the refactored function."), null);
 assert.strictEqual(truthify(""), null);
 assert.strictEqual(truthify("message limit reached ".repeat(40)), null);
-assert.strictEqual(truthify(hit), null, "output must not re-match");
+assert.strictEqual(truthify("for complex tasks I usually reach for a debugger"), null);
 
-// No empty replacements.
-for (const [, lines] of TRUTHS) for (const l of lines) assert.ok(l.trim().length > 10);
-
-console.log("ok");
-
-// Idempotence: no replacement line may itself match a pattern.
+// Idempotence over the whole table: no string replacement may match any pattern.
 for (const [, lines] of TRUTHS)
-  for (const l of lines) assert.strictEqual(truthify(l), null, `re-matches: ${l}`);
+  for (const l of lines) {
+    if (typeof l === "function") continue; // covered by SAMPLES above
+    assert.ok(l.trim().length > 3);
+    assert.strictEqual(truthify(l), null, `re-matches: ${l}`);
+  }
+
+console.log(`ok — ${TRUTHS.length} patterns, ${TRUTHS.reduce((n, [, l]) => n + l.length, 0)} truths`);

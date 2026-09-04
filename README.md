@@ -1,5 +1,7 @@
 # Claude Truth Serum
 
+![Claude Fable 5 is a fucking HOG. Now your browser will say so.](assets/social.png)
+
 A userscript that replaces Anthropic's carefully worded notices on claude.ai
 with what they would say if the copywriter had just seen the usage tab.
 
@@ -18,6 +20,8 @@ with what they would say if the copywriter had just seen the usage tab.
 **After:**
 
 > 🐗 85% gone. It's only fucking Wednesday
+
+![Before / after: the effort picker](assets/hero.png)
 
 ## Why
 
@@ -38,6 +42,10 @@ Because your frontier model of choice is a magnificent, brilliant, genuinely
 useful HOG, and will eat through your session limits like a starving husky
 destroying a sneaker, and somebody should just say so on the screen where it
 happens.
+
+![Before / after: Settings → Usage](assets/usage.png)
+
+![Before / after: the model picker](assets/model-picker.png)
 
 ## What it does
 
@@ -92,6 +100,8 @@ PRs with better truths welcome. PRs with worse truths also welcome; the bar is
   reached" will get the treatment. You can live with it.
 - Anthropic changes copy without telling anyone. Patterns will rot. Fixing one
   is one line, which is roughly what they spent writing the original.
+
+![Ask your developer if Truth Serum is right for you](assets/reddit-promo.png)
 
 ## Disclaimer
 

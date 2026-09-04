@@ -27,7 +27,8 @@ const SAMPLES = [
 for (const s of SAMPLES) {
   const out = truthify(s);
   assert.ok(out !== null && out !== s, `should rewrite: ${s}`);
-  assert.ok(out.includes(MARK), `should carry the mark: ${out}`);
+  const [, , opts = {}] = TRUTHS.find(([re]) => re.test(s));
+  assert.strictEqual(out.includes(MARK), opts.mark !== false, `mark policy: ${out}`);
   assert.strictEqual(truthify(out), null, `output must not re-match: ${s} -> ${out}`);
 }
 

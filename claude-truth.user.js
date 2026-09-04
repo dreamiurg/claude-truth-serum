@@ -14,8 +14,9 @@
 // @updateURL    https://raw.githubusercontent.com/dreamiurg/claude-truth-serum/main/claude-truth.user.js
 // ==/UserScript==
 
-// [pattern, [rotating replacements]]. A replacement is a string or a
+// [pattern, [rotating replacements], options?]. A replacement is a string or a
 // (match, ...captures) => string function. Add a line, add a truth.
+// options.mark = false skips the MARK prefix (the greeting already sits next to the hogged logo).
 //
 // Anchored (^...$) patterns only match a whole text node / element — use those
 // for short UI strings that could otherwise show up inside your own chat.
@@ -220,7 +221,7 @@ const TRUTHS = [
   [/^\s*Adjust limit\s*$/i, ["Raise the ceiling", "Loosen the belt"]],
 
   // --- Misc chrome ----------------------------------------------------------
-  [/^\s*(\w+) returns!\s*$/, [(_, n) => `${n} returns! So does the meter`, (_, n) => `Back for more, ${n}? The hog remembers you`]],
+  [/^\s*(\w+) returns!\s*$/, [(_, n) => `${n} returns! So does the meter`, (_, n) => `Back for more, ${n}? The hog remembers you`], { mark: false }],
   [/^\s*Thinking[.…]*\s*$/i, ["Spending…", "Deliberating, expensively…", "Ruminating at 3.5×…", "Quietly consuming your week…"]],
 ];
 
@@ -236,11 +237,12 @@ function next(lines) {
 // Returns the rewritten string, or null if nothing matched.
 function truthify(text, censor = CENSOR) {
   if (!text || text.length > 400) return null;
-  for (const [re, lines] of TRUTHS) {
+  for (const [re, lines, opts = {}] of TRUTHS) {
     if (!re.test(text)) continue;
+    const prefix = opts.mark === false ? "" : MARK;
     const out = text.replace(re, (...m) => {
       const l = next(lines);
-      return MARK + (typeof l === "function" ? l(...m) : l);
+      return prefix + (typeof l === "function" ? l(...m) : l);
     });
     return censor ? bleep(out) : out;
   }
@@ -268,9 +270,6 @@ if (typeof document !== "undefined") {
     const svgs = root.matches('svg[viewBox="0 0 100 100"]') ? [root] : root.querySelectorAll('svg[viewBox="0 0 100 100"]');
     for (const s of svgs) {
       if (s.querySelectorAll("path").length !== 1) continue;
-      // Greeting already got a MARK from truthify; one hog is plenty.
-      const block = s.parentElement && s.parentElement.closest("div");
-      if (block && block.textContent.trim().startsWith(HOG)) { s.remove(); continue; }
       const size = s.getBoundingClientRect().height || parseFloat(s.getAttribute("height")) || 32;
       const span = document.createElement("span");
       span.textContent = HOG;

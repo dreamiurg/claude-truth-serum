@@ -268,6 +268,9 @@ if (typeof document !== "undefined") {
     const svgs = root.matches('svg[viewBox="0 0 100 100"]') ? [root] : root.querySelectorAll('svg[viewBox="0 0 100 100"]');
     for (const s of svgs) {
       if (s.querySelectorAll("path").length !== 1) continue;
+      // Greeting already got a MARK from truthify; one hog is plenty.
+      const block = s.parentElement && s.parentElement.closest("div");
+      if (block && block.textContent.trim().startsWith(HOG)) { s.remove(); continue; }
       const size = s.getBoundingClientRect().height || parseFloat(s.getAttribute("height")) || 32;
       const span = document.createElement("span");
       span.textContent = HOG;
@@ -321,11 +324,11 @@ if (typeof document !== "undefined") {
     queued = true;
     requestAnimationFrame(() => {
       queued = false;
-      for (const n of pending) if (n.isConnected) { hogify(n); scan(n); }
+      for (const n of pending) if (n.isConnected) { scan(n); hogify(n); }
       pending.clear();
     });
   }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 
-  const start = () => { hogFavicon(); hogify(document.body); scan(document.body); };
+  const start = () => { hogFavicon(); scan(document.body); hogify(document.body); };
   document.body ? start() : document.addEventListener("DOMContentLoaded", start);
 }

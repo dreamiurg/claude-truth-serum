@@ -53,8 +53,6 @@ happens.
   sudden outbreak of honesty at Anthropic. Change `MARK` at the top if you
   prefer a different animal.
 - Contains profanity. Not a lot. Roughly the amount the situation calls for.
-  Too much for the office? Click the Tampermonkey/Violentmonkey icon →
-  **Truth Serum: censor**. Same truths, f-words bleeped, page reloads.
 - Rewrites **36 known notices** with a rotating pool of **130 truths**, so the
   wall says something different each time you hit it.
 - Covers the composer warnings, the model picker, the effort menu, the
@@ -62,9 +60,21 @@ happens.
 - Keeps the numbers. "85% used" becomes "85% gone" plus commentary; the reset
   time, the promo percentage and the promo end date are all preserved and
   merely editorialised.
+- Replaces the Claude sunburst logo, the splash screen, the sidebar wordmark
+  and the favicon with 🐗. There is no Claude. There is only hog.
 - Does nothing else. No network access, no storage, `@grant none`. It edits
   text in your own tab. Anthropic's servers are not consulted and would not
   approve.
+
+## FUCKING CENSORSHIP MODE
+
+For people who fucking need it. Click the Tampermonkey / Violentmonkey icon →
+**Truth Serum: censor**. Same truths, the f-words become f\*\*\*, the page
+reloads, and your screen is now safe for a standup. Same menu to turn it back.
+
+> 🐗 85% gone. It's only f\*\*\*ing Wednesday
+
+The hog is unchanged. The hog cannot be censored.
 
 ## Install
 

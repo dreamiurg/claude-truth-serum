@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Claude Truth Serum
 // @namespace    https://github.com/dreamiurg/claude-truth-serum
-// @version      1.4.0
-// @description  Replaces Anthropic's canned notices on claude.ai with what they actually mean.
+// @version      1.5.0
+// @description  Replaces Anthropic's canned notices on claude.ai with what they actually mean. Also the logo. With a hog.
 // @author       dreamiurg
 // @match        https://claude.ai/*
 // @match        https://*.claude.ai/*
-// @run-at       document-idle
+// @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
@@ -257,6 +257,35 @@ if (typeof GM_registerMenuCommand === "function") {
 }
 
 if (typeof document !== "undefined") {
+  // --- Hog the branding ----------------------------------------------------
+  // The Claude sunburst (greeting, splash screen) is an inline
+  // <svg viewBox="0 0 100 100"> with a single path; the sidebar wordmark is a
+  // text node "Claude" inside the .df-titlebar-brand link. Both become the hog.
+  // ponytail: viewBox+path-count heuristic, no stable ids on claude.ai to hook.
+  const HOG = MARK.trim();
+  function hogify(root) {
+    if (root.nodeType !== Node.ELEMENT_NODE) return;
+    const svgs = root.matches('svg[viewBox="0 0 100 100"]') ? [root] : root.querySelectorAll('svg[viewBox="0 0 100 100"]');
+    for (const s of svgs) {
+      if (s.querySelectorAll("path").length !== 1) continue;
+      const size = s.getBoundingClientRect().height || parseFloat(s.getAttribute("height")) || 32;
+      const span = document.createElement("span");
+      span.textContent = HOG;
+      span.style.cssText = `display:inline-block;font-size:${Math.round(size * 0.9)}px;line-height:1;`;
+      s.replaceWith(span);
+    }
+    for (const a of root.querySelectorAll(".df-titlebar-brand a"))
+      if (a.textContent.trim() === "Claude") a.textContent = HOG;
+  }
+  function hogFavicon() {
+    for (const l of document.querySelectorAll('link[rel*="icon"]')) l.remove();
+    const l = document.createElement("link");
+    l.rel = "icon";
+    l.href = "data:image/svg+xml," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${HOG}</text></svg>`);
+    document.head.appendChild(l);
+  }
+
   const SKIP = "script,style,textarea,input,code,pre,[contenteditable]";
   // Formatting-only tags. No <a>: replacing textContent would eat the link.
   const INLINE = new Set(["SPAN", "STRONG", "B", "EM", "I", "U", "S", "SMALL", "MARK", "SUP", "SUB"]);
@@ -292,10 +321,11 @@ if (typeof document !== "undefined") {
     queued = true;
     requestAnimationFrame(() => {
       queued = false;
-      for (const n of pending) if (n.isConnected) scan(n);
+      for (const n of pending) if (n.isConnected) { hogify(n); scan(n); }
       pending.clear();
     });
   }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 
-  scan(document.body);
+  const start = () => { hogFavicon(); hogify(document.body); scan(document.body); };
+  document.body ? start() : document.addEventListener("DOMContentLoaded", start);
 }
